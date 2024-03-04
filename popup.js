@@ -1,4 +1,5 @@
 var origBoard;
+var playRound = 0;
 const oPlayer = 'O';
 const aiPlayer = 'X'
 // const winCombos = [
@@ -14,6 +15,15 @@ const aiPlayer = 'X'
 //     [0, 4, 8],
 //     [6, 4, 2]
 // ]
+var currentTabId ; // there will be only one in this array
+
+function callback(tabs) {
+    currentTabId= tabs[0].id;
+    //console.log(currentTab); // also has properties like currentTab.id
+  }
+
+chrome.tabs.query({ active: true, currentWindow: true }, callback);
+
 
 const cells = document.querySelectorAll('.cell');
 startGame();
@@ -47,14 +57,28 @@ function turnClick(square) {
 function turn(squareId, objectPlayer) {
     origBoard[squareId] = objectPlayer; //shows the player who has clicked the cell
     document.getElementById(squareId).innerText = objectPlayer; //put more string in the cell with the ID just called
-    console.log(origBoard);
-var hi = squareId;
-chrome.tabs.query({ active: true, lastFocusedWindow: true }, function(tabs , hi) {
-        if (tabs.length > 0) {
+    console.log(currentTabId);
 
-            chrome.scripting.executeScript({ target: { tabId: tabs[0].id }, function(squareId){
+    //let [tabs] = chrome.tabs.query({ active: true, currentWindow: true });
+
+
+    //chrome.tabs.query({ active: true, lastFocusedWindow: true }, function(tabs , squareId) {
+      //console.log("squareId = " + squareId);
+
+        //if (tabs.length > 0) {
+            
+            chrome.scripting.executeScript({ target: { tabId: currentTabId }, function(squareId){
+                console.log(squareId);
                 document.getElementById('prompt-textarea').focus();
-                document.execCommand('insertText', false, 'Lets play tic toc toe , I chose' + squareId);
+               // if(playRound == 0){
+                    document.execCommand('insertText', false, 'Lets play tic toc toe ,I am O and I choseing ' + squareId);
+                //}
+
+                // else{
+                //     document.execCommand('insertText', false, 'I choseing ' + squareId);
+                // }
+
+                //check Result (win / lose / tie)
 
                 setTimeout(function() {
                         document.querySelector('[data-testid="send-button"]').click();
@@ -62,16 +86,18 @@ chrome.tabs.query({ active: true, lastFocusedWindow: true }, function(tabs , hi)
                         //   const lastgptResult = [...document.getElementsByClassName('w-full text-token-text-primary')].filter((element,index) => index % 2 != 0).pop();
                         //   console.log(lastgptResult.getElementsByTagName('p')[0].innerHTML);
                         // }, 2000);  //some times request has delay sooo =>> we cant trust to this 2000 mili seconds !!
-                      }, 2000);
-            } });
+                    }, 2000);
+                    
+                //check Result (win / lose / tie)
+            },args:[squareId] });
 
             // const currentTab = tabs[0];
             // //console.log(currentTab.url); // The URL of the current tab
             // console.log(currentTab);
             // // currentTab.getElementById('prompt-textarea').focus();
             // // currentTab.execCommand('insertText', false, 'Lets play tic toc toe , I chose' + message.value);
-        }
-    });
+        //}
+    //});
 
     // const activeTabId = Number(new URLSearchParams(location.search).get('tabId'));
     // chrome.scripting.executeScript({ target: { tabId: activeTabId }, function(){
