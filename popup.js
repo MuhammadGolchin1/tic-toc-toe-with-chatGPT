@@ -1,28 +1,14 @@
 var origBoard;
 var playRound = 0;
 const oPlayer = 'O';
-const aiPlayer = 'X'
-// const winCombos = [
-//     //horizontal
-//     [0, 1, 2],
-//     [3, 4, 5],
-//     [6, 7, 8],
-//     //vertical
-//     [0, 3, 6],
-//     [1, 4, 7],
-//     [2, 5, 8],
-//     //slant
-//     [0, 4, 8],
-//     [6, 4, 2]
-// ]
-var currentTabId ; // there will be only one in this array
+const aiPlayer = 'X';
+var currentTabId ; 
 
-function callback(tabs) {
+function setCurrentTabId(tabs) {
     currentTabId= tabs[0].id;
-    //console.log(currentTab); // also has properties like currentTab.id
-  }
+}
 
-chrome.tabs.query({ active: true, currentWindow: true }, callback);
+chrome.tabs.query({ active: true, currentWindow: true }, setCurrentTabId);
 
 
 const cells = document.querySelectorAll('.cell');
@@ -30,23 +16,19 @@ startGame();
 
 function startGame() {
     document.querySelector(".endgame").style.display = "none";
+    //origBoard = Array.from({length: 9}, (_, i) => i + 1);
     origBoard = Array.from(Array(9).keys());
-   // console.log(origBoard);
     for (var i = 0; i < cells.length; i++) {
         cells[i].innerText = ''; //clear
         cells[i].style.removeProperty('background-color');
-        //add a event process vào click mouse event
         cells[i].addEventListener('click', turnClick, false);
     }
 }
 
 
 function turnClick(square) {
-    // // write down the ID of any cell clicked
-    // console.log(square.target.id)
-
     if (typeof origBoard[square.target.id] == 'number') { //If the clicked ID is "number", it means that both human and AI have not played in that position. So.....
-        // pass in the ID that clicking 
+
         turn(square.target.id, oPlayer)
 
         //After the player takes a turn, check to see if there is a tie
@@ -57,77 +39,83 @@ function turnClick(square) {
 function turn(squareId, objectPlayer) {
     origBoard[squareId] = objectPlayer; //shows the player who has clicked the cell
     document.getElementById(squareId).innerText = objectPlayer; //put more string in the cell with the ID just called
-    console.log(currentTabId);
+    //todo: create waiting
 
-    //let [tabs] = chrome.tabs.query({ active: true, currentWindow: true });
+    var playerChoices = createOPlayerChoicesString() + createAiPlayerChoicesString();
+
+    chrome.scripting.executeScript({ target: { tabId: currentTabId }, function(playerChoices){
+        document.getElementById('prompt-textarea').focus();
+        
+        //`listen! if we are playing tic-tac-toe and our playboard starts from 0 to 8, I am starter and I Choose position numbers 0, 3, 5, and 8 while you choose position numbers 1, 2, and 4 what is your next position? don't draw the board just say to me what is your next position(say position number without any extra words)`
+       
+        document.execCommand('insertText', false, 
+        `listen! if we are playing tic-tac-toe and our playboard starts from 0 to 8, I am starter and ${playerChoices} what is your next position? don't draw the board just say to me what is your next position(say position number)`
+        );
+        document.querySelector('[data-testid="send-button"]').click();
+
+        //check Result (win / lose / tie)
 
 
-    //chrome.tabs.query({ active: true, lastFocusedWindow: true }, function(tabs , squareId) {
-      //console.log("squareId = " + squareId);
+        setTimeout(function() {
+            let lastgptResult = [...document.getElementsByClassName('w-full text-token-text-primary')].filter((element,index) => index % 2 != 0).pop();
 
-        //if (tabs.length > 0) {
+            // while(typeof lastgptResult.getElementsByTagName('p')[0] === "undefined"){
+            //     console.log("undefined");
+            // }
+            console.log('lastgptResult :' + lastgptResult.getElementsByTagName('p')[0].innerHTML);
+        }, 1000);  //some times request has delay sooo =>> we cant trust to this 2000 mili seconds !!
+
             
-            chrome.scripting.executeScript({ target: { tabId: currentTabId }, function(squareId){
-                console.log(squareId);
-                document.getElementById('prompt-textarea').focus();
-               // if(playRound == 0){
-                    document.execCommand('insertText', false, 'Lets play tic toc toe ,I am O and I choseing ' + squareId);
-                //}
-
-                // else{
-                //     document.execCommand('insertText', false, 'I choseing ' + squareId);
-                // }
-
-                //check Result (win / lose / tie)
-
-                setTimeout(function() {
-                        document.querySelector('[data-testid="send-button"]').click();
-                        // setTimeout(function() {
-                        //   const lastgptResult = [...document.getElementsByClassName('w-full text-token-text-primary')].filter((element,index) => index % 2 != 0).pop();
-                        //   console.log(lastgptResult.getElementsByTagName('p')[0].innerHTML);
-                        // }, 2000);  //some times request has delay sooo =>> we cant trust to this 2000 mili seconds !!
-                    }, 2000);
-                    
-                //check Result (win / lose / tie)
-            },args:[squareId] });
-
-            // const currentTab = tabs[0];
-            // //console.log(currentTab.url); // The URL of the current tab
-            // console.log(currentTab);
-            // // currentTab.getElementById('prompt-textarea').focus();
-            // // currentTab.execCommand('insertText', false, 'Lets play tic toc toe , I chose' + message.value);
-        //}
-    //});
-
-    // const activeTabId = Number(new URLSearchParams(location.search).get('tabId'));
-    // chrome.scripting.executeScript({ target: { tabId: activeTabId }, function(){
-    //     console.log('injected foo');
-    // } });
-
-    // chrome.tabs.query({ active: true, lastFocusedWindow: true }, function(tabs) {
-    //     if (tabs.length > 0) {
-    //         const currentTab = tabs[0];
-    //         //console.log(currentTab.url); // The URL of the current tab
-    //         console.log(currentTab);
-    //         // currentTab.getElementById('prompt-textarea').focus();
-    //         // currentTab.execCommand('insertText', false, 'Lets play tic toc toe , I chose' + message.value);
-    //     }
-    // });
-    
-    
-
-    // chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-    //     chrome.tabs.sendMessage(tabs[0].id, { action: 'sendMyChose' , value :squareId }, function (response) {
-    //       console.log(response.html); // HTML content of the current page
-    //     });
-    // });
-
+        //check Result (win / lose / tie)
+    },args:[playerChoices] });
 
     //let gameWon = checkWin(origBoard, objectPlayer) //check win
     //if (gameWon) gameOver(gameWon)
 }
 
+function createOPlayerChoicesString(){
+    var numberOfChoices = origBoard.filter(x=>x == oPlayer).length;
 
+    if(numberOfChoices == 1){
+        return `I Choose position number ${origBoard.indexOf(oPlayer)}`;
+    }
+
+    let IndexOfChoices = ``;
+
+    for(let i= 0 ; i< origBoard.length ; i++){
+        if(origBoard[i] == oPlayer)
+        {
+            IndexOfChoices += (i+`, `);
+        }
+    }
+    
+   // return `I Choose position numbers 0 , 3, 5, and 8`;
+   return `I Choose position numbers ${IndexOfChoices.slice(0, IndexOfChoices.length - 3) + `and ` + IndexOfChoices.slice(IndexOfChoices.length - 3)}`.slice(0, -2);
+}
+
+function createAiPlayerChoicesString(){
+    var numberOfChoices = origBoard.filter(x=>x == aiPlayer).length;
+
+    if(numberOfChoices == 0){
+        return ``;
+    }
+    
+    if(numberOfChoices == 1){
+        return `while you choose position number ${origBoard.indexOf(aiPlayer)}`;
+    }
+
+    let IndexOfChoices = ``;
+
+    for(let i= 0 ; i< origBoard.length ; i++){
+        if(origBoard[i] == aiPlayer)
+        {
+            IndexOfChoices += (i+`, `);
+        }
+    }
+    
+   // `while you choose position numbers 1 , 2, and 4`
+   return `while you choose position numbers ${IndexOfChoices.slice(0, IndexOfChoices.length - 3) + `and ` + IndexOfChoices.slice(IndexOfChoices.length - 3)}`.slice(0, -2);
+}
 
 // function checkWin(board, player) {
 //     let plays = board.reduce((a, e, i) =>
