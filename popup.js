@@ -40,7 +40,7 @@ function turn(squareId, objectPlayer) {
     origBoard[squareId] = objectPlayer; //shows the player who has clicked the cell
     document.getElementById(squareId).innerText = objectPlayer; //put more string in the cell with the ID just called
     //todo: create waiting
-
+    //document.getElementsByTagName("body")[0]
     var playerChoices = createOPlayerChoicesString() + createAiPlayerChoicesString();
 
     chrome.scripting.executeScript({ target: { tabId: currentTabId }, function(playerChoices){
@@ -115,6 +115,85 @@ function createAiPlayerChoicesString(){
     
    // `while you choose position numbers 1 , 2, and 4`
    return `while you choose position numbers ${IndexOfChoices.slice(0, IndexOfChoices.length - 3) + `and ` + IndexOfChoices.slice(IndexOfChoices.length - 3)}`.slice(0, -2);
+}
+
+function CheckGameStatus(){
+    var numberOfChoices = origBoard.filter(x=>x == aiPlayer || x == oPlayer ).length;
+
+    if(origBoard[0] == origBoard[1] && origBoard[1] == origBoard[2]){
+        if(origBoard[0] == oPlayer){
+            return 1;
+        }
+        else{
+            return 0;
+        }
+    }
+
+    else if(origBoard[3] == origBoard[4] && origBoard[4] == origBoard[5]){
+        if(origBoard[3] == oPlayer){
+            return 1;
+        }
+        else{
+            return 0;
+        }
+    }
+
+    else if(origBoard[6] == origBoard[7] && origBoard[7] == origBoard[8]){
+        if(origBoard[6] == oPlayer){
+            return 1;
+        }
+        else{
+            return 0;
+        }
+    }
+
+    else if(origBoard[0] == origBoard[3] && origBoard[3] == origBoard[6]){
+        if(origBoard[0] == oPlayer){
+            return 1;
+        }
+        else{
+            return 0;
+        }
+    }
+
+    else if(origBoard[1] == origBoard[4] && origBoard[4] == origBoard[7]){
+        if(origBoard[1] == oPlayer){
+            return 1;
+        }
+        else{
+            return 0;
+        }
+    }
+
+    else if(origBoard[2] == origBoard[5] && origBoard[5] == origBoard[8]){
+        if(origBoard[2] == oPlayer){
+            return 1;
+        }
+        else{
+            return 0;
+        }
+    }
+
+    else if(origBoard[0] == origBoard[4] && origBoard[4] == origBoard[8]){
+        if(origBoard[0] == oPlayer){
+            return 1;
+        }
+        else{
+            return 0;
+        }
+    }
+
+    else if(origBoard[2] == origBoard[4] && origBoard[4] == origBoard[6]){
+        if(origBoard[2] == oPlayer){
+            return 1;
+        }
+        else{
+            return 0;
+        }
+    }
+    else if(numberOfChoices == 9){
+        return 0;
+    }
 }
 
 // function checkWin(board, player) {
