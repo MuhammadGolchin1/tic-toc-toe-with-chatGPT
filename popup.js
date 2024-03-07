@@ -36,6 +36,8 @@ function turnClick(square) {
     }
 }
 
+
+
 function turn(squareId, objectPlayer) {
     origBoard[squareId] = objectPlayer; //shows the player who has clicked the cell
     document.getElementById(squareId).innerText = objectPlayer; //put more string in the cell with the ID just called
@@ -73,13 +75,39 @@ function turn(squareId, objectPlayer) {
         //     console.log(gptResul);
         // }, 2000);  //some times request has delay sooo =>> we cant trust to this 2000 mili seconds !!
         
+        let interval = setInterval(function() {
+            var element = [ ...document.getElementsByClassName('w-full text-token-text-primary') ].filter(( element, index ) => index % 2 != 0)[LastAnswerIndex+1].getElementsByTagName('p')[0];
+            if (element.innerHTML.slice(-1) == '.') {
+              clearInterval(interval); // Stop the interval once the value is present
+              var result = element.innerHTML.slice(-2)[0];
+              console.log(result);
+            }
+          }, 1000);
 
-        setTimeout(function() {
-            const lastgptResult = [...document.getElementsByClassName('w-full text-token-text-primary')].filter((element,index) => index % 2 != 0)[LastAnswerIndex + 1].getElementsByTagName('p')[0];
-            console.log(lastgptResult);
-            //console.log(lastgptResult.slice(-2));
+        // async function getGptResponse(gptResult) {
+        //     let response = await gptResult.length > 5;
+        //     return  response
+        //   }
 
-        }, 2000);  //some times request has delay sooo =>> we cant trust to this 2000 mili seconds !!
+        // function getGptResponse ( response ) {
+        //     return new Promise(( resolve ) => {
+        //       if (typeof response !== 'undefined') {
+        //         console.log("اجرا");
+        //         resolve(response);
+        //       }
+        //     });
+        // }
+
+        // const lastgptResult = [ ...document.getElementsByClassName('w-full text-token-text-primary') ].filter(( element, index ) => index % 2 != 0)[ LastAnswerIndex + 1 ];
+        // console.log('lastgptResult', lastgptResult);
+        // getGptResponse(lastgptResult).then(result => {
+        //     console.log('Promise response', result);
+        // });
+//        console.log('Promise response', result.getElementsByTagName('p')[ 0 ].slice(-2));
+
+        //console.log(lastgptResult);
+        //console.log(lastgptResult.slice(-2));
+
 
             
         //check Result (win / lose / tie)
