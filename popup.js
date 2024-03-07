@@ -40,7 +40,8 @@ function turn(squareId, objectPlayer) {
     origBoard[squareId] = objectPlayer; //shows the player who has clicked the cell
     document.getElementById(squareId).innerText = objectPlayer; //put more string in the cell with the ID just called
     //todo: create waiting
-    //document.getElementsByTagName("body")[0]
+    document.getElementsByTagName("body")[0].style.pointerEvents = 'none';
+    
     var playerChoices = createOPlayerChoicesString() + createAiPlayerChoicesString();
 
     chrome.scripting.executeScript({ target: { tabId: currentTabId }, function(playerChoices){
@@ -48,6 +49,10 @@ function turn(squareId, objectPlayer) {
         
         //`listen! if we are playing tic-tac-toe and our playboard starts from 0 to 8, I am starter and I Choose position numbers 0, 3, 5, and 8 while you choose position numbers 1, 2, and 4 what is your next position? don't draw the board just say to me what is your next position(say position number without any extra words)`
        
+        let LastAnswerIndex = [...document.getElementsByClassName('w-full text-token-text-primary')].filter((element,index) => index % 2 != 0).length - 1;
+
+        console.log(LastAnswerIndex);
+
         document.execCommand('insertText', false, 
         `listen! if we are playing tic-tac-toe and our playboard starts from 0 to 8, I am starter and ${playerChoices} what is your next position? don't draw the board just say to me what is your next position(say position number)`
         );
@@ -56,14 +61,25 @@ function turn(squareId, objectPlayer) {
         //check Result (win / lose / tie)
 
 
-        setTimeout(function() {
-            let lastgptResult = [...document.getElementsByClassName('w-full text-token-text-primary')].filter((element,index) => index % 2 != 0).pop();
+        // setTimeout(function() {
+        //     let lastgptResult = [...document.getElementsByClassName('w-full text-token-text-primary')].filter((element,index) => index % 2 != 0).pop();
 
-            // while(typeof lastgptResult.getElementsByTagName('p')[0] === "undefined"){
-            //     console.log("undefined");
-            // }
-            console.log('lastgptResult :' + lastgptResult.getElementsByTagName('p')[0].innerHTML);
-        }, 1000);  //some times request has delay sooo =>> we cant trust to this 2000 mili seconds !!
+        //     // while(typeof lastgptResult.getElementsByTagName('p')[0] === "undefined"){
+        //     //     console.log("undefined");
+        //     // }
+            
+        //     let gptResul =  lastgptResult.getElementsByTagName('p')[0].innerHTML;
+
+        //     console.log(gptResul);
+        // }, 2000);  //some times request has delay sooo =>> we cant trust to this 2000 mili seconds !!
+        
+
+        setTimeout(function() {
+            const lastgptResult = [...document.getElementsByClassName('w-full text-token-text-primary')].filter((element,index) => index % 2 != 0)[LastAnswerIndex + 1].getElementsByTagName('p')[0];
+            console.log(lastgptResult);
+            //console.log(lastgptResult.slice(-2));
+
+        }, 2000);  //some times request has delay sooo =>> we cant trust to this 2000 mili seconds !!
 
             
         //check Result (win / lose / tie)
