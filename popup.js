@@ -37,81 +37,47 @@ function turnClick(square) {
 }
 
 
-
 function turn(squareId, objectPlayer) {
     origBoard[squareId] = objectPlayer; //shows the player who has clicked the cell
     document.getElementById(squareId).innerText = objectPlayer; //put more string in the cell with the ID just called
     //todo: create waiting
-    document.getElementsByTagName("body")[0].style.pointerEvents = 'none';
+    //document.getElementsByTagName("body")[0].style.pointerEvents = 'none';
     
     var playerChoices = createOPlayerChoicesString() + createAiPlayerChoicesString();
 
-    chrome.scripting.executeScript({ target: { tabId: currentTabId }, function(playerChoices){
-        document.getElementById('prompt-textarea').focus();
-        
-        //`listen! if we are playing tic-tac-toe and our playboard starts from 0 to 8, I am starter and I Choose position numbers 0, 3, 5, and 8 while you choose position numbers 1, 2, and 4 what is your next position? don't draw the board just say to me what is your next position(say position number without any extra words)`
-       
-        let LastAnswerIndex = [...document.getElementsByClassName('w-full text-token-text-primary')].filter((element,index) => index % 2 != 0).length - 1;
-
-        console.log(LastAnswerIndex);
-
-        document.execCommand('insertText', false, 
-        `listen! if we are playing tic-tac-toe and our playboard starts from 0 to 8, I am starter and ${playerChoices} what is your next position? don't draw the board just say to me what is your next position(say position number)`
-        );
-        document.querySelector('[data-testid="send-button"]').click();
-
-        //check Result (win / lose / tie)
-
-
-        // setTimeout(function() {
-        //     let lastgptResult = [...document.getElementsByClassName('w-full text-token-text-primary')].filter((element,index) => index % 2 != 0).pop();
-
-        //     // while(typeof lastgptResult.getElementsByTagName('p')[0] === "undefined"){
-        //     //     console.log("undefined");
-        //     // }
+    chrome.scripting.executeScript({ target: { tabId: currentTabId ,allFrames : true}, 
+        async function (playerChoices){
+            document.getElementById('prompt-textarea').focus();
             
-        //     let gptResul =  lastgptResult.getElementsByTagName('p')[0].innerHTML;
-
-        //     console.log(gptResul);
-        // }, 2000);  //some times request has delay sooo =>> we cant trust to this 2000 mili seconds !!
+            let LastAnswerIndex = [...document.getElementsByClassName('w-full text-token-text-primary')].filter((element,index) => index % 2 != 0 && element.localName != "button").length - 1;
+            console.log(LastAnswerIndex);
+            document.execCommand('insertText', false, 
+            `we are playing tic-tac-toe and our playboard starts from 0 to 8, I am starter and ${playerChoices} what is your next position? don't draw the board just say to me what is your next position(say position number)`
+            );
+            document.querySelector('[data-testid="send-button"]').click();
         
-        let interval = setInterval(function() {
-            var element = [ ...document.getElementsByClassName('w-full text-token-text-primary') ].filter(( element, index ) => index % 2 != 0)[LastAnswerIndex+1].getElementsByTagName('p')[0];
-            if (element.innerHTML.slice(-1) == '.') {
-              clearInterval(interval); // Stop the interval once the value is present
-              var result = element.innerHTML.slice(-2)[0];
-              console.log(result);
+            //check Result (win / lose / tie)
+            var defer = new Promise(resolve => {
+            let interval = setInterval(function() {
+                var element = [ ...document.getElementsByClassName('w-full text-token-text-primary') ].filter(( element, index ) => index % 2 != 0)[LastAnswerIndex+1].getElementsByTagName('p')[0];
+                if (element.innerHTML.slice(-1) == '.') {
+                  clearInterval(interval); // Stop the interval once the value is present
+                  resolve(element.innerHTML.slice(-2)[0]);
+                  console.log(element.innerHTML.slice(-2)[0]);
+                }
+              }, 1000);
+            })
+            return defer;
             }
-          }, 1000);
-
-        // async function getGptResponse(gptResult) {
-        //     let response = await gptResult.length > 5;
-        //     return  response
-        //   }
-
-        // function getGptResponse ( response ) {
-        //     return new Promise(( resolve ) => {
-        //       if (typeof response !== 'undefined') {
-        //         console.log("اجرا");
-        //         resolve(response);
-        //       }
-        //     });
-        // }
-
-        // const lastgptResult = [ ...document.getElementsByClassName('w-full text-token-text-primary') ].filter(( element, index ) => index % 2 != 0)[ LastAnswerIndex + 1 ];
-        // console.log('lastgptResult', lastgptResult);
-        // getGptResponse(lastgptResult).then(result => {
-        //     console.log('Promise response', result);
-        // });
-//        console.log('Promise response', result.getElementsByTagName('p')[ 0 ].slice(-2));
-
-        //console.log(lastgptResult);
-        //console.log(lastgptResult.slice(-2));
-
-
-            
-        //check Result (win / lose / tie)
-    },args:[playerChoices] });
+    ,args:[playerChoices] })
+    .then(injectionResults => {
+        for (const frameResult of injectionResults) {
+          const {frameId, result} = frameResult;
+          console.log(`Frame ${frameId} result:`, result);
+            origBoard[result] = aiPlayer; 
+            document.getElementById(result).innerText = aiPlayer;
+        }
+      });
 
     //let gameWon = checkWin(origBoard, objectPlayer) //check win
     //if (gameWon) gameOver(gameWon)
@@ -133,7 +99,7 @@ function createOPlayerChoicesString(){
         }
     }
     
-   // return `I Choose position numbers 0 , 3, 5, and 8`;
+   // I Choose position numbers 0 , 3, 5, and 8
    return `I Choose position numbers ${IndexOfChoices.slice(0, IndexOfChoices.length - 3) + `and ` + IndexOfChoices.slice(IndexOfChoices.length - 3)}`.slice(0, -2);
 }
 
@@ -145,10 +111,10 @@ function createAiPlayerChoicesString(){
     }
     
     if(numberOfChoices == 1){
-        return `while you choose position number ${origBoard.indexOf(aiPlayer)}`;
+        return ` while you choose position number ${origBoard.indexOf(aiPlayer)}`;
     }
 
-    let IndexOfChoices = ``;
+    let IndexOfChoices = ` `;
 
     for(let i= 0 ; i< origBoard.length ; i++){
         if(origBoard[i] == aiPlayer)
