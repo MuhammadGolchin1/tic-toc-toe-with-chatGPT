@@ -2,13 +2,16 @@ var origBoard;
 var playRound = 0;
 const oPlayer = 'O';
 const aiPlayer = 'X';
-var currentTabId ; 
+var currentTabId;
 
 function setCurrentTabId(tabs) {
-    currentTabId= tabs[0].id;
+    currentTabId = tabs[0].id;
 }
 
-chrome.tabs.query({ active: true, currentWindow: true }, setCurrentTabId);
+chrome.tabs.query({
+    active: true,
+    currentWindow: true
+}, setCurrentTabId);
 
 
 const cells = document.querySelectorAll('.cell');
@@ -41,167 +44,151 @@ function turn(squareId, objectPlayer) {
     origBoard[squareId] = objectPlayer; //shows the player who has clicked the cell
     document.getElementById(squareId).innerText = objectPlayer; //put more string in the cell with the ID just called
     //todo: create waiting
-    //document.getElementsByTagName("body")[0].style.pointerEvents = 'none';
-    
+    document.getElementsByTagName("body")[0].style.pointerEvents = 'none';
+    document.getElementsByTagName("img")[0].style.display = 'block';
     var playerChoices = createOPlayerChoicesString() + createAiPlayerChoicesString();
 
-    chrome.scripting.executeScript({ target: { tabId: currentTabId ,allFrames : true}, 
-        async function (playerChoices){
-            document.getElementById('prompt-textarea').focus();
-            
-            let LastAnswerIndex = [...document.getElementsByClassName('w-full text-token-text-primary')].filter((element,index) => index % 2 != 0 && element.localName != "button").length - 1;
-            console.log(LastAnswerIndex);
-            document.execCommand('insertText', false, 
-            `we are playing tic-tac-toe and our playboard starts from 0 to 8, I am starter and ${playerChoices} what is your next position? don't draw the board just say to me what is your next position(say position number)`
-            );
-            document.querySelector('[data-testid="send-button"]').click();
-        
-            //check Result (win / lose / tie)
-            var defer = new Promise(resolve => {
-            let interval = setInterval(function() {
-                var element = [ ...document.getElementsByClassName('w-full text-token-text-primary') ].filter(( element, index ) => index % 2 != 0)[LastAnswerIndex+1].getElementsByTagName('p')[0];
-                if (element.innerHTML.slice(-1) == '.') {
-                  clearInterval(interval); // Stop the interval once the value is present
-                  resolve(element.innerHTML.slice(-2)[0]);
-                  console.log(element.innerHTML.slice(-2)[0]);
-                }
-              }, 1000);
-            })
-            return defer;
+    chrome.scripting.executeScript({
+            target: {
+                tabId: currentTabId,
+                allFrames: true
+            },
+            async function (playerChoices) {
+                document.getElementById('prompt-textarea').focus();
+
+                let LastAnswerIndex = [...document.getElementsByClassName('w-full text-token-text-primary')].filter((element, index) => index % 2 != 0 && element.localName != "button").length - 1;
+                console.log(LastAnswerIndex);
+                document.execCommand('insertText', false,
+                    `we are playing tic-tac-toe and our playboard starts from 0 to 8, I am starter and ${playerChoices} what is your next position? don't draw the board just say to me what is your next position(say position number)`
+                );
+                document.querySelector('[data-testid="send-button"]').click();
+
+                //check Result (win / lose / tie)
+                var defer = new Promise(resolve => {
+                    let interval = setInterval(function () {
+                        var element = [...document.getElementsByClassName('w-full text-token-text-primary')].filter((element, index) => index % 2 != 0)[LastAnswerIndex + 1].getElementsByTagName('p')[0];
+                        if (element.innerHTML.slice(-1) == '.') {
+                            clearInterval(interval); // Stop the interval once the value is present
+                            resolve(element.innerHTML.slice(-2)[0]); // we have little bug here
+                            //resolve(element.innerHTML.match(/\d+$/)[0]);
+                        }
+                    }, 1000);
+                })
+                return defer;
+            },
+            args: [playerChoices]
+        })
+        .then(injectionResults => {
+            for (const frameResult of injectionResults) {
+                const {
+                    frameId,
+                    result
+                } = frameResult;
+                origBoard[result] = aiPlayer;
+                document.getElementById(result).innerText = aiPlayer;
+                document.getElementsByTagName("body")[0].style.pointerEvents = 'auto';
+                document.getElementsByTagName("img")[0].style.display = 'none';
             }
-    ,args:[playerChoices] })
-    .then(injectionResults => {
-        for (const frameResult of injectionResults) {
-          const {frameId, result} = frameResult;
-          console.log(`Frame ${frameId} result:`, result);
-            origBoard[result] = aiPlayer; 
-            document.getElementById(result).innerText = aiPlayer;
-        }
-      });
+        });
 
     //let gameWon = checkWin(origBoard, objectPlayer) //check win
     //if (gameWon) gameOver(gameWon)
 }
 
-function createOPlayerChoicesString(){
-    var numberOfChoices = origBoard.filter(x=>x == oPlayer).length;
+function createOPlayerChoicesString() {
+    var numberOfChoices = origBoard.filter(x => x == oPlayer).length;
 
-    if(numberOfChoices == 1){
+    if (numberOfChoices == 1) {
         return `I Choose position number ${origBoard.indexOf(oPlayer)}`;
     }
 
     let IndexOfChoices = ``;
 
-    for(let i= 0 ; i< origBoard.length ; i++){
-        if(origBoard[i] == oPlayer)
-        {
-            IndexOfChoices += (i+`, `);
+    for (let i = 0; i < origBoard.length; i++) {
+        if (origBoard[i] == oPlayer) {
+            IndexOfChoices += (i + `, `);
         }
     }
-    
-   // I Choose position numbers 0 , 3, 5, and 8
-   return `I Choose position numbers ${IndexOfChoices.slice(0, IndexOfChoices.length - 3) + `and ` + IndexOfChoices.slice(IndexOfChoices.length - 3)}`.slice(0, -2);
+
+    // I Choose position numbers 0 , 3, 5, and 8
+    return `I Choose position numbers ${IndexOfChoices.slice(0, IndexOfChoices.length - 3) + `and ` + IndexOfChoices.slice(IndexOfChoices.length - 3)}`.slice(0, -2);
 }
 
-function createAiPlayerChoicesString(){
-    var numberOfChoices = origBoard.filter(x=>x == aiPlayer).length;
+function createAiPlayerChoicesString() {
+    var numberOfChoices = origBoard.filter(x => x == aiPlayer).length;
 
-    if(numberOfChoices == 0){
+    if (numberOfChoices == 0) {
         return ``;
     }
-    
-    if(numberOfChoices == 1){
+
+    if (numberOfChoices == 1) {
         return ` while you choose position number ${origBoard.indexOf(aiPlayer)}`;
     }
 
     let IndexOfChoices = ` `;
 
-    for(let i= 0 ; i< origBoard.length ; i++){
-        if(origBoard[i] == aiPlayer)
-        {
-            IndexOfChoices += (i+`, `);
+    for (let i = 0; i < origBoard.length; i++) {
+        if (origBoard[i] == aiPlayer) {
+            IndexOfChoices += (i + `, `);
         }
     }
-    
-   // `while you choose position numbers 1 , 2, and 4`
-   return `while you choose position numbers ${IndexOfChoices.slice(0, IndexOfChoices.length - 3) + `and ` + IndexOfChoices.slice(IndexOfChoices.length - 3)}`.slice(0, -2);
+
+    // `while you choose position numbers 1 , 2, and 4`
+    return ` while you choose position numbers ${IndexOfChoices.slice(0, IndexOfChoices.length - 3) + `and ` + IndexOfChoices.slice(IndexOfChoices.length - 3)}`.slice(0, -2);
 }
 
-function CheckGameStatus(){
-    var numberOfChoices = origBoard.filter(x=>x == aiPlayer || x == oPlayer ).length;
+function CheckGameStatus() {
+    var numberOfChoices = origBoard.filter(x => x == aiPlayer || x == oPlayer).length;
 
-    if(origBoard[0] == origBoard[1] && origBoard[1] == origBoard[2]){
-        if(origBoard[0] == oPlayer){
+    if (origBoard[0] == origBoard[1] && origBoard[1] == origBoard[2]) {
+        if (origBoard[0] == oPlayer) {
             return 1;
-        }
-        else{
+        } else {
             return 0;
         }
-    }
-
-    else if(origBoard[3] == origBoard[4] && origBoard[4] == origBoard[5]){
-        if(origBoard[3] == oPlayer){
+    } else if (origBoard[3] == origBoard[4] && origBoard[4] == origBoard[5]) {
+        if (origBoard[3] == oPlayer) {
             return 1;
-        }
-        else{
+        } else {
             return 0;
         }
-    }
-
-    else if(origBoard[6] == origBoard[7] && origBoard[7] == origBoard[8]){
-        if(origBoard[6] == oPlayer){
+    } else if (origBoard[6] == origBoard[7] && origBoard[7] == origBoard[8]) {
+        if (origBoard[6] == oPlayer) {
             return 1;
-        }
-        else{
+        } else {
             return 0;
         }
-    }
-
-    else if(origBoard[0] == origBoard[3] && origBoard[3] == origBoard[6]){
-        if(origBoard[0] == oPlayer){
+    } else if (origBoard[0] == origBoard[3] && origBoard[3] == origBoard[6]) {
+        if (origBoard[0] == oPlayer) {
             return 1;
-        }
-        else{
+        } else {
             return 0;
         }
-    }
-
-    else if(origBoard[1] == origBoard[4] && origBoard[4] == origBoard[7]){
-        if(origBoard[1] == oPlayer){
+    } else if (origBoard[1] == origBoard[4] && origBoard[4] == origBoard[7]) {
+        if (origBoard[1] == oPlayer) {
             return 1;
-        }
-        else{
+        } else {
             return 0;
         }
-    }
-
-    else if(origBoard[2] == origBoard[5] && origBoard[5] == origBoard[8]){
-        if(origBoard[2] == oPlayer){
+    } else if (origBoard[2] == origBoard[5] && origBoard[5] == origBoard[8]) {
+        if (origBoard[2] == oPlayer) {
             return 1;
-        }
-        else{
+        } else {
             return 0;
         }
-    }
-
-    else if(origBoard[0] == origBoard[4] && origBoard[4] == origBoard[8]){
-        if(origBoard[0] == oPlayer){
+    } else if (origBoard[0] == origBoard[4] && origBoard[4] == origBoard[8]) {
+        if (origBoard[0] == oPlayer) {
             return 1;
-        }
-        else{
+        } else {
             return 0;
         }
-    }
-
-    else if(origBoard[2] == origBoard[4] && origBoard[4] == origBoard[6]){
-        if(origBoard[2] == oPlayer){
+    } else if (origBoard[2] == origBoard[4] && origBoard[4] == origBoard[6]) {
+        if (origBoard[2] == oPlayer) {
             return 1;
-        }
-        else{
+        } else {
             return 0;
         }
-    }
-    else if(numberOfChoices == 9){
+    } else if (numberOfChoices == 9) {
         return 0;
     }
 }
