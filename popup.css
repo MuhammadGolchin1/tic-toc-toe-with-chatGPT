@@ -4,6 +4,13 @@ body {
   width: 280px;
   height: 280px;
 }
+img{
+	display: none;
+    margin-top: 92px;
+    margin-left: 92px;
+    width: 96px;
+    height: 96px;
+}
 
 td {
 	border        : 2px solid #333;
