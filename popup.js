@@ -68,9 +68,16 @@ function turn(squareId, objectPlayer) {
                     let interval = setInterval(function () {
                         var element = [...document.getElementsByClassName('w-full text-token-text-primary')].filter((element, index) => index % 2 != 0)[LastAnswerIndex + 1].getElementsByTagName('p')[0];
                         if (element.innerHTML.slice(-1) == '.') {
-                            clearInterval(interval); // Stop the interval once the value is present
-                            resolve(element.innerHTML.slice(-2)[0]); // we have little bug here
-                            //resolve(element.innerHTML.match(/\d+$/)[0]);
+                            
+                            let tmp = element.innerHTML;
+                            for (let i = tmp.length - 1; i >= 0; i--) {
+                                if (!isNaN(tmp[i]) && !isNaN(parseInt(tmp[i]))) {
+                                    console.log(tmp[i]);
+                                    clearInterval(interval);
+                                    resolve(tmp[i]);
+                                    break;
+                                }
+                            }
                         }
                     }, 1000);
                 })
