@@ -46,6 +46,11 @@ function turn(squareId, objectPlayer) {
     //todo: create waiting
     document.getElementsByTagName("body")[0].style.pointerEvents = 'none';
     document.getElementsByTagName("img")[0].style.display = 'block';
+
+    if(IsGameFinished()){
+        return;
+    }
+
     var playerChoices = createOPlayerChoicesString() + createAiPlayerChoicesString();
 
     chrome.scripting.executeScript({
@@ -93,7 +98,8 @@ function turn(squareId, objectPlayer) {
                 } = frameResult;
                 origBoard[result] = aiPlayer;
                 document.getElementById(result).innerText = aiPlayer;
-                document.getElementsByTagName("body")[0].style.pointerEvents = 'auto';
+                
+                IsGameFinished();
                 document.getElementsByTagName("img")[0].style.display = 'none';
             }
         });
@@ -144,59 +150,82 @@ function createAiPlayerChoicesString() {
     return ` while you choose position numbers ${IndexOfChoices.slice(0, IndexOfChoices.length - 3) + `and ` + IndexOfChoices.slice(IndexOfChoices.length - 3)}`.slice(0, -2);
 }
 
-function CheckGameStatus() {
+function IsGameFinished(){
+
+    let status = checkGameStatus();
+    if(status == 1){
+        document.querySelector(".endgame .text").innerText = "congratulations! you won our Stupid AI:)";
+    }
+    else if(status == -1){
+        document.querySelector(".endgame .text").innerText = "I can't believe it! you lose from our stupid AI :(";
+    }
+    else if(status == 0){
+        document.querySelector(".endgame .text").innerText = "try harder! you can win this game!";
+    }
+    else if(status == -2){
+        document.getElementsByTagName("body")[0].style.pointerEvents = 'auto';
+        return false;
+    }
+    document.querySelector(".endgame").style.display = "block";
+    return true;
+}
+
+function checkGameStatus() {
     var numberOfChoices = origBoard.filter(x => x == aiPlayer || x == oPlayer).length;
 
     if (origBoard[0] == origBoard[1] && origBoard[1] == origBoard[2]) {
         if (origBoard[0] == oPlayer) {
             return 1;
         } else {
-            return 0;
+            return -1;
         }
     } else if (origBoard[3] == origBoard[4] && origBoard[4] == origBoard[5]) {
         if (origBoard[3] == oPlayer) {
             return 1;
         } else {
-            return 0;
+            return -1;
         }
     } else if (origBoard[6] == origBoard[7] && origBoard[7] == origBoard[8]) {
         if (origBoard[6] == oPlayer) {
             return 1;
         } else {
-            return 0;
+            return -1;
         }
     } else if (origBoard[0] == origBoard[3] && origBoard[3] == origBoard[6]) {
         if (origBoard[0] == oPlayer) {
             return 1;
         } else {
-            return 0;
+            return -1;
         }
     } else if (origBoard[1] == origBoard[4] && origBoard[4] == origBoard[7]) {
         if (origBoard[1] == oPlayer) {
             return 1;
         } else {
-            return 0;
+            return -1;
         }
     } else if (origBoard[2] == origBoard[5] && origBoard[5] == origBoard[8]) {
         if (origBoard[2] == oPlayer) {
             return 1;
         } else {
-            return 0;
+            return -1;
         }
     } else if (origBoard[0] == origBoard[4] && origBoard[4] == origBoard[8]) {
         if (origBoard[0] == oPlayer) {
             return 1;
         } else {
-            return 0;
+            return -1;
         }
     } else if (origBoard[2] == origBoard[4] && origBoard[4] == origBoard[6]) {
         if (origBoard[2] == oPlayer) {
             return 1;
         } else {
-            return 0;
+            return -1;
         }
     } else if (numberOfChoices == 9) {
         return 0;
+    }
+    else{
+        return -2;
     }
 }
 
