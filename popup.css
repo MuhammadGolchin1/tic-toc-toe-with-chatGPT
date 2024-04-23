@@ -5,9 +5,11 @@ body {
   height: 280px;
 }
 img{
+	opacity: 0.8;
+	position: absolute;
 	display: none;
     margin-top: 92px;
-    margin-left: 92px;
+    margin-left: 93px;
     width: 96px;
     height: 96px;
 }
@@ -50,7 +52,7 @@ table {
 .endgame {
 	display         : none;
 	width           : 200px;
-	top             : 120px;
+	top             : 20%;
 	background-color: rgba(37, 167, 54, 0.8);
 	position        : absolute;
 	left            : 50%;

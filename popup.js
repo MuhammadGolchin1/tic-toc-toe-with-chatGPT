@@ -44,11 +44,14 @@ function turn(squareId, objectPlayer) {
     document.getElementById(squareId).innerText = objectPlayer; //put more string in the cell with the ID just called
     //todo: create waiting
     document.getElementsByTagName("body")[0].style.pointerEvents = 'none';
-    document.getElementsByTagName("img")[0].style.display = 'block';
 
     if (IsGameFinished()) {
         return;
     }
+
+    document.getElementsByTagName("img")[0].style.display = 'block';
+
+ 
 
     var playerChoices = createOPlayerChoicesString() + createAiPlayerChoicesString();
 
@@ -97,9 +100,8 @@ function turn(squareId, objectPlayer) {
                 } = frameResult;
                 origBoard[result] = aiPlayer;
                 document.getElementById(result).innerText = aiPlayer;
-
-                IsGameFinished();
                 document.getElementsByTagName("img")[0].style.display = 'none';
+                IsGameFinished();
             }
         });
 }
