@@ -49,9 +49,7 @@ function turn(squareId, objectPlayer) {
         return;
     }
 
-    document.getElementsByTagName("img")[0].style.display = 'block';
-
- 
+    document.getElementsByTagName("img")[0].style.display = 'block'; 
 
     var playerChoices = createOPlayerChoicesString() + createAiPlayerChoicesString();
 
@@ -68,7 +66,7 @@ function turn(squareId, objectPlayer) {
                 document.execCommand('insertText', false,
                     `we are playing tic-tac-toe and our playboard starts from 0 to 8, I am starter and ${playerChoices} what is your next position? don't draw the board just say to me what is your next position(say position number)`
                 );
-                document.querySelector('[data-testid="send-button"]').click();
+                document.querySelector('[data-testid="fruitjuice-send-button"]').click();
 
                 //check Result (win / lose / tie)
                 var defer = new Promise(resolve => {
