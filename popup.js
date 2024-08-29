@@ -61,17 +61,17 @@ function turn(squareId, objectPlayer) {
             async function (playerChoices) {
                 document.getElementById('prompt-textarea').focus();
 
-                let LastAnswerIndex = [...document.getElementsByClassName('w-full text-token-text-primary')].filter((element, index) => index % 2 != 0 && element.localName != "button").length - 1;
+                let LastAnswerIndex = [...document.getElementsByClassName('w-full text-token-text-primary focus-visible:outline-2 focus-visible:outline-offset-[-4px]')].filter((element, index) => index % 2 != 0 && element.localName != "button").length - 1;
                 console.log(LastAnswerIndex);
                 document.execCommand('insertText', false,
                     `we are playing tic-tac-toe and our playboard starts from 0 to 8, I am starter and ${playerChoices} what is your next position? don't draw the board just say to me what is your next position(say position number)`
                 );
-                document.querySelector('[data-testid="fruitjuice-send-button"]').click();
+                document.querySelector('[data-testid="send-button"]').click();
 
                 //check Result (win / lose / tie)
                 var defer = new Promise(resolve => {
                     let interval = setInterval(function () {
-                        var element = [...document.getElementsByClassName('w-full text-token-text-primary')].filter((element, index) => index % 2 != 0)[LastAnswerIndex + 1].getElementsByTagName('p')[0];
+                        var element = [...document.getElementsByClassName('w-full text-token-text-primary focus-visible:outline-2 focus-visible:outline-offset-[-4px]')].filter((element, index) => index % 2 != 0)[LastAnswerIndex + 1].getElementsByTagName('p')[0];
                         if (element.innerHTML.slice(-1) == '.') {
 
                             let tmp = element.innerHTML;
