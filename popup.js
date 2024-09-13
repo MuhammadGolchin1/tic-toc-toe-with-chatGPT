@@ -64,7 +64,14 @@ function turn(squareId, objectPlayer) {
                     `we are playing tic-tac-toe and our playboard starts from 0 to 8, I am starter and ${playerChoices} what is your next position? don't draw the board just say to me what is your next position(say position number)`
                 );
                 
-                document.querySelector('[data-testid="send-button"]').click();
+                let inter = setInterval(function(){
+                    var qs = document.querySelector('[data-testid="send-button"]');
+                    if(qs.disabled == false){
+                        qs.click();
+                        clearInterval(inter);
+                    }
+
+                })
 
                 //check Result (win / lose / tie)
                 var defer = new Promise(resolve => {
